@@ -1,6 +1,7 @@
 # roundy
 
-<img src='./roundy.png' alt='Roundy'/>
+<img src='https://github.com/themre/roundy/blob/master/roundy.png?raw=true' alt='Roundy'/>
+
 Configurable react round slider. Supports touch events.
 
 ## Installation
@@ -11,6 +12,7 @@ npm i roundy (or yarn add roundy)
 
 ## Usage
 
+<img src='https://github.com/themre/roundy/blob/master/roundy_example.jpg?raw=true' alt='Roundy'/>
 You can use Roundy as a single slider:
 
 ```javascript
