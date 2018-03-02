@@ -46,6 +46,7 @@ import { RoundyGroup } from 'roundy'
 ## API
 
 Roundy provides the following API:
+
 | Prop | Description | Default |
 | ------------- |-------------| -----|
 | value | number: Slider value | 50 |
