@@ -9,7 +9,6 @@ class Roundy extends Component {
     super(props)
     this.state = {
       value: props.value,
-      pointerEvents: 'visiblePainted'
     }
     this.uniqueId = Math.floor(Math.random() * 100) + Date.now()
     this.touches = []
