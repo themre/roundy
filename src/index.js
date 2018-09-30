@@ -8,7 +8,8 @@ class Roundy extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      value: props.value
+      value: props.value,
+      pointerEvents: 'visiblePainted'
     }
     this.uniqueId = Math.floor(Math.random() * 100) + Date.now()
     this.touches = []
@@ -22,9 +23,27 @@ class Roundy extends Component {
     }
   }
 
+  componentDidMount () {
+    document.addEventListener('mouseup', this.cancelDrag)
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('mouseup', this.cancelDrag)
+  }
+
+  cancelDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    this._svgElement.style.pointerEvents = 'none'
+    this.allowChange = false
+    this.isDrag = false
+    this.touches = [] // clear touches
+  }
+
+
   up = e => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     this._svgElement.style.pointerEvents = 'none'
     this.allowChange = false
     this.isDrag = false
@@ -172,20 +191,25 @@ class Roundy extends Component {
     return offset
   }
   getMaskLine({ radius, segments, index }) {
+    let val = 360/segments * index - 90;
+
+    let rotateFunction = 'rotate(' + val.toString() + ',' + radius + ',' + radius + ')';
     return (
-      <line
-        key={index}
-        x1={radius}
-        y1={radius}
-        x2={radius * 2}
-        y2={radius}
-        style={{
-          stroke: 'rgb(0,0,0)',
-          strokeWidth: 2,
-          transform: `rotate(${360 / segments * index - 90}deg)`,
-          transformOrigin: '50% 50%'
-        }}
-      />
+      <g 
+        key={index}       
+        transform={rotateFunction}
+      >
+        <line
+          x1={radius}
+          y1={radius}
+          x2={radius * 2}
+          y2={radius}
+          style={{
+            stroke: 'rgb(0,0,0)',
+            strokeWidth: 2,
+          }}
+        />
+      </g>
     )
   }
 
