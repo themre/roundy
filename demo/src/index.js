@@ -12,6 +12,7 @@ class Demo extends Component {
       min: 0,
       color:'#00ff00',
       step: 10,
+      value: 30,
       radius: 100
     }
   }
@@ -33,11 +34,12 @@ class Demo extends Component {
         Min <input value={min} onChange={e => this.setState({min: e.target.value})} type='number' min={0} max={50} />
         Color <input value={color} onChange={e => this.setState({color: e.target.value})} type='color' />
         Radius <input value={radius} onChange={e => this.setState({radius: e.target.value})} type='number' min={40} max={300} />
-        <Roundy value={50} radius={parseInt(radius)} min={parseInt(min)} max={parseInt(max)} color={color} overrideStyle={`
+        <Roundy allowClick value={this.state.value} radius={parseInt(radius)} min={parseInt(min)} max={parseInt(max)} color={color} overrideStyle={`
           .sliderHandle:after {
             background: pink;
           }
-        `} />
+        `} onChange={ value => this.setState({value})}/>
+        {this.state.value}
         <h1>roundy group</h1>
         <p>Use array of objects to easily create stacked group of roundy sliders.</p>
         <pre>{
@@ -49,7 +51,7 @@ class Demo extends Component {
         }</pre>
         <RoundyGroup
           sliders={[
-            { value: 30, step: 10, id: 'mjaw', max: 50,  radius: 60, color: 'blueviolet', onChange:(val, props) => console.log(props) },
+            { value: 30, step: 4, id: 'mjaw', max: 50, strokeWidth: 20, radius: 55, color: 'blueviolet', onChange:(val, props) => console.log(props) },
             { value: 30, step: 10, max: 50, radius: 100 },
             { value: 100, step: 20, max: 200, color: 'orange', radius: 140, sliced: false, step: 1 }
           ]}

@@ -26,8 +26,8 @@
   },
   "devDependencies": {
     "nwb": "0.21.x",
-    "react": "^16.2.0",
-    "react-dom": "^16.2.0"
+    "react": "16.7.0",
+    "react-dom": "16.7.0"
   },
   "author": "Marko Trebizan",
   "homepage": "",

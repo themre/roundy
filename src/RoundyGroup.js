@@ -26,8 +26,8 @@ class RoundGroup extends Component {
       10 //default radius is 100
     return (
       <Wrap style={{ width: maxSize, height: maxSize }} {...rest}>
-        {sliders.map(slider => {
-          return <Roundy {...slider} />
+        {sliders.map((slider, i) => {
+          return <Roundy key={i} {...slider} />
         })}
       </Wrap>
     )

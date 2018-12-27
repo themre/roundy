@@ -1,19 +1,22 @@
-import React, { Component } from 'react'
-import styled from 'styled-components'
-import {Wrapper} from './Style'
+import React, { Component, createRef, Fragment } from 'react'
+import { Wrapper } from './Style'
 
 const DEGREE_IN_RADIANS = Math.PI / 180
 const classNamePrefix = 'RoundSlider'
+
 class Roundy extends Component {
   constructor(props) {
     super(props)
     this.state = {
       value: props.value,
+      angle: this.valueToAngle(props.value)
     }
     this.uniqueId = Math.floor(Math.random() * 100) + Date.now()
     this.touches = []
     this.allowChange = false
     this.isDrag = false
+    this._handle = createRef()
+    this._svgElement = createRef()
   }
 
   componentWillReceiveProps(props) {
@@ -22,36 +25,31 @@ class Roundy extends Component {
     }
   }
 
-  componentDidMount () {
-    document.addEventListener('mouseup', this.cancelDrag)
+  componentDidMount() {
+    document.addEventListener('mouseup', this.up)
+    if (!this.props.allowClick && this._svgElement.current) {
+      this._svgElement.current.style.pointerEvents = 'none'
+    }
   }
 
   componentWillUnmount() {
-    document.removeEventListener('mouseup', this.cancelDrag)
+    document.removeEventListener('mouseup', this.up)
   }
-
-  cancelDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    this._svgElement.style.pointerEvents = 'none'
-    this.allowChange = false
-    this.isDrag = false
-    this.touches = [] // clear touches
-  }
-
 
   up = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    this._svgElement.style.pointerEvents = 'none'
+    if (!this.props.allowClick && this._svgElement.current) {
+      this._svgElement.current.style.pointerEvents = 'none'
+    }
     this.allowChange = false
     this.isDrag = false
     this.touches = [] // clear touches
+    // e.preventDefault()
+    e.stopPropagation()
     this.props.onAfterChange && this.props.onAfterChange(this.value, this.props)
   }
 
   getTouchMove = e => {
-    e.preventDefault()
+    // e.preventDefault()
     e.stopPropagation()
     if (this.allowChange || this.isDrag) {
       let idx = 0
@@ -64,39 +62,36 @@ class Roundy extends Component {
       }
     }
   }
-  
+
   down = e => {
-    this._svgElement.style.pointerEvents = 'auto'
+    this._svgElement.current.style.pointerEvents = 'auto'
     e.stopPropagation()
     e.preventDefault()
-    this.isDrag = true
+    // we update first value, then we decide based on rotation
+    if (!this.isDrag) {
+      this.updateValue(e, true)
+    }
     this.allowChange = true
+    this.isDrag = true
     if (e.changedTouches) {
       this.touches.push(...e.changedTouches)
     }
   }
 
-  valueToAngle = value => {
-    const { max, min } = this.props
-    const angle = (value - min) / (max - min) * 359.9999
-    return angle
-  }
-
-  getArc = value => {
-    let { max, min, radius, strokeWidth } = this.props
-    const angle = this.valueToAngle(value)
+  getArc = (startAngle, endAngle) => {
+    let { radius, strokeWidth } = this.props
     const pathRadius = radius - strokeWidth / 2
     const start = this.polarToCartesian({
       radius,
       pathRadius,
-      angle
+      angle: startAngle
     })
     const end = this.polarToCartesian({
       radius,
       pathRadius,
-      angle: 0
+      angle: endAngle
     })
-    const arcSweep = angle <= 180 ? 0 : 1
+    const arcSweep = startAngle <= 180 ? 0 : 1
 
     return `M ${start} A ${pathRadius} ${pathRadius} 0 ${arcSweep} 0 ${end}`
   }
@@ -110,7 +105,7 @@ class Roundy extends Component {
   }
 
   getCenter() {
-    var rect = this._svgElement.getBoundingClientRect()
+    var rect = this._svgElement.current.getBoundingClientRect()
     return {
       top: rect.top + this.props.radius,
       left: rect.left + this.props.radius
@@ -130,37 +125,52 @@ class Roundy extends Component {
 
   angle(y, x) {
     let angle = this.radToDeg(Math.atan2(y, x))
-    if (angle < 0 && x < 0) angle += 360
+    if (angle < 0 && x < 0) {
+      angle += 360
+    }
     return angle + 90
   }
 
   angleToValue = angle => {
     const { min, max } = this.props
-    const v = angle / 360 * (max - min) + min
+    const v = (angle / 360) * (max - min) + min
     return v
   }
 
   valueToAngle = value => {
     const { max, min } = this.props
-    const angle = (value - min) / (max - min) * 359.9999
+    const angle = ((value - min) / (max - min)) * 359.9999
     return angle
   }
 
   stepRounding(degree) {
-    const { step, min, max } = this.props
-    const value = this.angleToValue(degree)
-    let remain, currVal, nextVal, preVal, val, ang
-    remain = (value - min) % step
-    currVal = value - remain
-    nextVal = this.limitValue(currVal + step)
-    preVal = this.limitValue(currVal - step)
-
-    if (value >= currVal)
-      val = value - currVal < nextVal - value ? currVal : nextVal
-    else val = currVal - value > value - preVal ? currVal : preVal
-    val = Math.round(val)
-    ang = this.valueToAngle(val)
-    return { value: val, angle: ang }
+    const { step, min } = this.props
+    const { angle: oldAngle } = this.state
+    let angToValue = 0
+    if (!this.isDrag) {
+      angToValue = this.angleToValue(degree)
+    } else {
+      angToValue = this.angleToValue(
+        oldAngle > 350 && degree < 90
+          ? Math.max(degree, 360)
+          : oldAngle < 20 && degree > 300
+          ? Math.min(degree, 0)
+          : degree
+      )
+    }
+    let value
+    const remain = (angToValue - min) % step
+    const currVal = angToValue - remain
+    const nextVal = this.limitValue(currVal + step)
+    const preVal = this.limitValue(currVal - step)
+    if (angToValue >= currVal)
+      value = angToValue - currVal < nextVal - angToValue ? currVal : nextVal
+    else {
+      value = currVal - angToValue > angToValue - preVal ? currVal : preVal
+    }
+    value = Math.round(value)
+    const ang = this.valueToAngle(value)
+    return { value, angle: ang }
   }
 
   updateValue = (event, forceSet) => {
@@ -174,30 +184,16 @@ class Roundy extends Component {
     const x = eX - left,
       y = eY - top
     const { value, angle } = this.stepRounding(this.angle(y, x))
-    this.setState({ value })
+    this.setState({ value, angle })
     this.props.onChange && this.props.onChange(value, this.props)
   }
 
-  clamp(angle) {
-    return Math.max(0, Math.min(angle || 0, this.props.max))
-  }
-
-  calcOffset() {
-    const { max, radius, strokeWidth, value } = RoundSlider.options
-    const r = radius - strokeWidth
-    const c = Math.PI * r * 2
-    const offset = (1 - value / max) * c
-    return offset
-  }
   getMaskLine({ radius, segments, index }) {
-    let val = 360/segments * index - 90;
-
-    let rotateFunction = 'rotate(' + val.toString() + ',' + radius + ',' + radius + ')';
+    const val = (360 / segments) * index - 90
+    const rotateFunction =
+      'rotate(' + val.toString() + ',' + radius + ',' + radius + ')'
     return (
-      <g 
-        key={index}       
-        transform={rotateFunction}
-      >
+      <g key={index} transform={rotateFunction}>
         <line
           x1={radius}
           y1={radius}
@@ -205,7 +201,7 @@ class Roundy extends Component {
           y2={radius}
           style={{
             stroke: 'rgb(0,0,0)',
-            strokeWidth: 2,
+            strokeWidth: 2
           }}
         />
       </g>
@@ -223,74 +219,83 @@ class Roundy extends Component {
       thumbSize,
       radius,
       sliced,
+      render,
       ...rest
     } = this.props
-    const { value } = this.state
+    const { angle } = this.state
     const segments = Math.floor((max - min) / step)
     const maskName = `${classNamePrefix}_${this.uniqueId}`
     return (
       <Wrapper
         strokeWidth={strokeWidth}
         thumbSize={thumbSize}
-        onMouseMove={e => this.allowChange && this.updateValue(e, true)}
+        onMouseMove={e => this.allowChange && this.updateValue(e, false)}
         onMouseUp={this.up}
+        onMouseDown={this.down}
         onTouchMove={this.getTouchMove}
         onTouchEnd={this.up}
         onTouchCancel={this.up}
         {...rest}
       >
-        <svg
-          ref={el => (this._svgElement = el)}
-          width={radius * 2}
-          height={radius * 2}
-        >
-          {sliced && (
-            <defs>
-              <mask id={maskName}>
-                <rect
-                  x="0"
-                  y="0"
-                  width={radius * 2}
-                  height={radius * 2}
-                  fill="white"
-                />
-                {step &&
-                  Array(segments)
-                    .fill()
-                    .map((e, i) => {
-                      return this.getMaskLine({ segments, radius, index: i })
-                    })}
-              </mask>
-            </defs>
-          )}
+        {render ? (
+          // use render props
+          render(this.state, this.props)
+        ) : (
+          <Fragment>
+            <svg ref={this._svgElement} width={radius * 2} height={radius * 2}>
+              {sliced && (
+                <defs>
+                  <mask id={maskName} maskUnits="userSpaceOnUse">
+                    <rect
+                      x={0}
+                      y={0}
+                      width={radius * 2 + 30}
+                      height={radius * 2 + 30}
+                      fill="white"
+                    />
+                    {step &&
+                      Array(segments)
+                        .fill()
+                        .map((e, i) => {
+                          return this.getMaskLine({
+                            segments,
+                            radius,
+                            index: i
+                          })
+                        })}
+                  </mask>
+                </defs>
+              )}
 
-          <circle
-            cx={radius}
-            cy={radius}
-            r={radius - strokeWidth / 2}
-            fill="transparent"
-            strokeDashoffset="0"
-            strokeWidth={strokeWidth}
-            stroke={bgColor}
-            mask={`url(#${maskName})`}
-          />
-          <path
-            fill="none"
-            strokeWidth={strokeWidth}
-            stroke={color}
-            d={this.getArc(value)}
-          />
-        </svg>
-        <div
-          ref={el => this._handle = el}
-          className="sliderHandle"
-          onMouseDown={this.down}
-          onTouchStart={this.down}
-          onMouseUp={this.up}
-          style={{
-            transform: `rotate(${this.valueToAngle(value) - 90}deg)`
-          }}
-        />
+              <circle
+                cx={radius}
+                cy={radius}
+                r={radius - strokeWidth / 2}
+                fill="transparent"
+                strokeDashoffset="0"
+                strokeWidth={strokeWidth}
+                stroke={bgColor}
+                mask={`url(#${maskName})`}
+              />
+              <path
+                fill="none"
+                strokeWidth={strokeWidth}
+                stroke={color}
+                d={this.getArc(angle, 0)}
+              />
+            </svg>
+            <div
+              ref={this._handle}
+              className="sliderHandle"
+              onMouseDown={this.down}
+              onTouchStart={this.down}
+              onMouseUp={this.up}
+              style={{
+                transform: `rotate(${angle - 90}deg)`
+              }}
+            />
+          </Fragment>
+        )}
       </Wrapper>
     )
   }
