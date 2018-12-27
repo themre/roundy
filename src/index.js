@@ -15,8 +15,8 @@ class Roundy extends Component {
     this.touches = []
     this.allowChange = false
     this.isDrag = false
+    this._wrapper = createRef()
     this._handle = createRef()
-    this._svgElement = createRef()
   }
 
   componentWillReceiveProps(props) {
@@ -27,8 +27,8 @@ class Roundy extends Component {
 
   componentDidMount() {
     document.addEventListener('mouseup', this.up)
-    if (!this.props.allowClick && this._svgElement.current) {
-      this._svgElement.current.style.pointerEvents = 'none'
+    if (!this.props.allowClick && this._wrapper.current) {
+      this._wrapper.current.style.pointerEvents = 'none'
     }
   }
 
@@ -37,8 +37,8 @@ class Roundy extends Component {
   }
 
   up = e => {
-    if (!this.props.allowClick && this._svgElement.current) {
-      this._svgElement.current.style.pointerEvents = 'none'
+    if (!this.props.allowClick && this._wrapper.current) {
+      this._wrapper.current.style.pointerEvents = 'none'
     }
     this.allowChange = false
     this.isDrag = false
@@ -64,7 +64,9 @@ class Roundy extends Component {
   }
 
   down = e => {
-    this._svgElement.current.style.pointerEvents = 'auto'
+    if (this._wrapper.current) {
+      this._wrapper.current.style.pointerEvents = 'auto'
+    }
     e.stopPropagation()
     e.preventDefault()
     // we update first value, then we decide based on rotation
@@ -105,7 +107,7 @@ class Roundy extends Component {
   }
 
   getCenter() {
-    var rect = this._svgElement.current.getBoundingClientRect()
+    var rect = this._wrapper.current.getBoundingClientRect()
     return {
       top: rect.top + this.props.radius,
       left: rect.left + this.props.radius
@@ -220,11 +222,13 @@ class Roundy extends Component {
       radius,
       sliced,
       render,
-      ...rest
+      style,
+      allowClick
     } = this.props
     const { angle } = this.state
     const segments = Math.floor((max - min) / step)
     const maskName = `${classNamePrefix}_${this.uniqueId}`
+    const size = radius * 2
     return (
       <Wrapper
         strokeWidth={strokeWidth}
@@ -235,22 +239,26 @@ class Roundy extends Component {
         onTouchMove={this.getTouchMove}
         onTouchEnd={this.up}
         onTouchCancel={this.up}
-        {...rest}
+        style={style}
+        allowClick={allowClick}
       >
         {render ? (
           // use render props
-          render(this.state, this.props)
+          <div className='customWrapper' ref={this._wrapper} style={{width: size, height: size, display: 'inline-block'}}>
+            {render(this.state, this.props)}
+          </div>
+
         ) : (
           <Fragment>
-            <svg ref={this._svgElement} width={radius * 2} height={radius * 2}>
+            <svg ref={this._wrapper} width={size} height={size}>
               {sliced && (
                 <defs>
                   <mask id={maskName} maskUnits="userSpaceOnUse">
                     <rect
                       x={0}
                       y={0}
-                      width={radius * 2 + 30}
-                      height={radius * 2 + 30}
+                      width={size}
+                      height={size}
                       fill="white"
                     />
                     {step &&
