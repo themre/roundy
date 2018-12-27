@@ -284,11 +284,12 @@ class Roundy extends Component {
                 strokeWidth={strokeWidth}
                 stroke={bgColor}
                 mask={`url(#${maskName})`}
-              />
+                />
               <path
                 fill="none"
                 strokeWidth={strokeWidth}
                 stroke={color}
+                mask={`url(#${maskName})`}
                 d={this.getArc(angle, 0)}
               />
             </svg>
