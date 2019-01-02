@@ -11,6 +11,11 @@ class Roundy extends Component {
       value: props.value,
       angle: this.valueToAngle(props.value)
     }
+    if (props.arcSize < 0) {
+      console.warn(
+        'arcSize should be between 1 and 360. '
+      )
+    }
     this.uniqueId = Math.floor(Math.random() * 100) + Date.now()
     this.touches = []
     this.allowChange = false
@@ -68,7 +73,7 @@ class Roundy extends Component {
       this._wrapper.current.style.pointerEvents = 'auto'
     }
     e.stopPropagation()
-    e.preventDefault()
+    // e.preventDefault()
     // we update first value, then we decide based on rotation
     if (!this.isDrag) {
       this.updateValue(e, true)
@@ -99,7 +104,7 @@ class Roundy extends Component {
   }
 
   polarToCartesian({ pathRadius, angle, radius }) {
-    const angleInRadians = (angle - 90) * DEGREE_IN_RADIANS
+    const angleInRadians = (angle - 180) * DEGREE_IN_RADIANS
     const x = radius + pathRadius * Math.cos(angleInRadians)
     const y = radius + pathRadius * Math.sin(angleInRadians)
 
@@ -126,36 +131,38 @@ class Roundy extends Component {
   }
 
   angle(y, x) {
-    let angle = this.radToDeg(Math.atan2(y, x))
-    if (angle < 0 && x < 0) {
-      angle += 360
+    const { rotation } = this.props
+    let angle = this.radToDeg(Math.atan2(y, x)) + 180 - rotation
+    if (angle > 360) {
+      angle = angle - 360
     }
-    return angle + 90
+    console.log(angle)
+    return angle
   }
 
   angleToValue = angle => {
-    const { min, max } = this.props
-    const v = (angle / 360) * (max - min) + min
+    const { min, max, arcSize } = this.props
+    const v = (angle / arcSize) * (max - min) + min
     return v
   }
 
   valueToAngle = value => {
-    const { max, min } = this.props
-    const angle = ((value - min) / (max - min)) * 359.9999
+    const { max, min, arcSize } = this.props
+    const angle = ((value - min) / (max - min)) * arcSize
     return angle
   }
 
   stepRounding(degree) {
-    const { step, min } = this.props
+    const { step, min, arcSize, rotation } = this.props
     const { angle: oldAngle } = this.state
-    let angToValue = 0
+    let angToValue = min
     if (!this.isDrag) {
       angToValue = this.angleToValue(degree)
     } else {
       angToValue = this.angleToValue(
-        oldAngle > 350 && degree < 90
-          ? Math.max(degree, 360)
-          : oldAngle < 20 && degree > 300
+        oldAngle > (arcSize - 20) && degree < (arcSize / 4)
+          ? Math.max(degree, arcSize)
+          : oldAngle < 20 && degree > (arcSize - 20)
           ? Math.min(degree, 0)
           : degree
       )
@@ -190,8 +197,9 @@ class Roundy extends Component {
     this.props.onChange && this.props.onChange(value, this.props)
   }
 
-  getMaskLine({ radius, segments, index }) {
-    const val = (360 / segments) * index - 90
+  getMaskLine(segments, index) {
+    const { radius, arcSize } = this.props
+    const val = (arcSize/ segments) * index + 180
     const rotateFunction =
       'rotate(' + val.toString() + ',' + radius + ',' + radius + ')'
     return (
@@ -223,12 +231,18 @@ class Roundy extends Component {
       sliced,
       render,
       style,
+      arcSize,
+      rotation,
       allowClick
     } = this.props
     const { angle } = this.state
     const segments = Math.floor((max - min) / step)
     const maskName = `${classNamePrefix}_${this.uniqueId}`
     const size = radius * 2
+    const styleRotation = {
+      transform: `rotate(${rotation}deg)`,
+      transformOrigin: '50% 50%'
+    }
     return (
       <Wrapper
         strokeWidth={strokeWidth}
@@ -244,53 +258,50 @@ class Roundy extends Component {
       >
         {render ? (
           // use render props
-          <div className='customWrapper' ref={this._wrapper} style={{width: size, height: size, display: 'inline-block'}}>
+          <div
+            className="customWrapper"
+            ref={this._wrapper}
+            style={{ width: size, height: size, display: 'inline-block' }}
+          >
             {render(this.state, this.props)}
           </div>
-
         ) : (
           <Fragment>
-            <svg ref={this._wrapper} width={size} height={size}>
+            <svg
+              ref={this._wrapper}
+              width={size}
+              height={size}
+            >
               {sliced && (
                 <defs>
-                  <mask id={maskName} maskUnits="userSpaceOnUse">
-                    <rect
-                      x={0}
-                      y={0}
-                      width={size}
-                      height={size}
-                      fill="white"
-                    />
+                  <mask id={maskName} maskUnits="userSpaceOnUse" style={styleRotation}>
+                    <rect x={0} y={0} width={size} height={size} fill="white" />
                     {step &&
                       Array(segments)
                         .fill()
                         .map((e, i) => {
-                          return this.getMaskLine({
-                            segments,
-                            radius,
-                            index: i
-                          })
+                          return this.getMaskLine(segments, i)
                         })}
                   </mask>
                 </defs>
               )}
 
-              <circle
-                cx={radius}
-                cy={radius}
-                r={radius - strokeWidth / 2}
+              <path
                 fill="transparent"
                 strokeDashoffset="0"
                 strokeWidth={strokeWidth}
                 stroke={bgColor}
                 mask={`url(#${maskName})`}
-                />
+                style={styleRotation}
+                d={this.getArc(Math.min(arcSize, 359.9999), 0)}
+              />
               <path
                 fill="none"
                 strokeWidth={strokeWidth}
                 stroke={color}
                 mask={`url(#${maskName})`}
-                d={this.getArc(angle, 0)}
+                style={styleRotation}
+                d={this.getArc(Math.min(angle, 359.9999), 0)}
               />
             </svg>
             <div
@@ -300,7 +311,7 @@ class Roundy extends Component {
               onTouchStart={this.down}
               onMouseUp={this.up}
               style={{
-                transform: `rotate(${angle - 90}deg)`
+                transform: `rotate(${angle + rotation}deg) scaleX(-1)`
               }}
             />
           </Fragment>
@@ -319,6 +330,8 @@ Roundy.defaultProps = {
   thumbSize: 20,
   sliced: true,
   strokeWidth: 35,
+  rotation: 0,
+  arcSize: 360,
   value: 50, // so we can see some difference
   radius: 100
 }

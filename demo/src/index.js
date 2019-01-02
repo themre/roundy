@@ -12,7 +12,7 @@ class Demo extends Component {
       min: 0,
       color: '#00ff00',
       step: 10,
-      value: 30,
+      value: 50,
       radius: 100
     }
   }
@@ -68,25 +68,29 @@ class Demo extends Component {
           max={parseInt(max)}
           color={color}
           overrideStyle={`
-          .sliderHandle:after {
-            background: pink;
-          }
-        `}
+            .sliderHandle:after {
+              background: pink;
+            }
+          `}
+          rotation={-90}
+          // arcSize={180}
+          // sliced={false}
           onChange={value => this.setState({ value })}
         />
+        {this.state.value}
         <Roundy
           allowClick
           radius={80}
           max={100}
           color={color}
-          style={{border: '2px solid blue', display: 'block'}}
+          style={{ border: '2px solid blue', display: 'block' }}
           render={({ angle, value: val2 }, props) => (
             <div
               style={{
                 width: 5,
                 background: 'red',
                 margin: '0 auto',
-                height: `${val2/props.max*100}%`
+                height: `${(val2 / props.max) * 100}%`
               }}
             >
               {val2}
