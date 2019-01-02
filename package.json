@@ -1,6 +1,6 @@
 {
   "name": "roundy",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "description": "roundy React component",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -26,8 +26,8 @@
   },
   "devDependencies": {
     "nwb": "0.21.x",
-    "react": "16.7.0",
-    "react-dom": "16.7.0"
+    "react": "16.6.3",
+    "react-dom": "16.6.3"
   },
   "author": "Marko Trebizan",
   "homepage": "",

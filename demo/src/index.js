@@ -60,6 +60,7 @@ class Demo extends Component {
           min={40}
           max={300}
         />
+        <div />
         <Roundy
           allowClick
           value={this.state.value}
@@ -67,29 +68,32 @@ class Demo extends Component {
           min={parseInt(min)}
           max={parseInt(max)}
           color={color}
+          stepSize={5}
           overrideStyle={`
             .sliderHandle:after {
               background: pink;
             }
           `}
-          rotation={-90}
-          // arcSize={180}
+          rotationOffset={-15}
+          arcSize={300}
           // sliced={false}
           onChange={value => this.setState({ value })}
         />
         {this.state.value}
+        <h2>Custom render props</h2>
         <Roundy
           allowClick
           radius={80}
           max={100}
           color={color}
-          style={{ border: '2px solid blue', display: 'block' }}
+          style={{ border: '2px solid blue', display: 'inline-flex', alignItems: 'center' }}
           render={({ angle, value: val2 }, props) => (
             <div
               style={{
-                width: 5,
+                width: `${(val2 / props.max) * 100}%`,
                 background: 'red',
                 margin: '0 auto',
+                borderRadius: val2,
                 height: `${(val2 / props.max) * 100}%`
               }}
             >
@@ -110,7 +114,7 @@ class Demo extends Component {
           sliders={[
             {
               value: 30,
-              step: 4,
+              stepSize: 4,
               id: 'mjaw',
               max: 50,
               strokeWidth: 20,
@@ -118,15 +122,14 @@ class Demo extends Component {
               color: 'blueviolet',
               onChange: (val, props) => console.log(props)
             },
-            { value: 30, step: 10, max: 50, radius: 100 },
+            { value: 30, stepSize: 10, max: 50, radius: 100 },
             {
               value: 100,
               step: 20,
               max: 200,
               color: 'orange',
               radius: 140,
-              sliced: false,
-              step: 1
+              // sliced: false
             }
           ]}
         />

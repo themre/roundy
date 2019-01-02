@@ -7,14 +7,16 @@ const classNamePrefix = 'RoundSlider'
 class Roundy extends Component {
   constructor(props) {
     super(props)
+    const { value, arcSize, rotationOffset } = props
     this.state = {
-      value: props.value,
-      angle: this.valueToAngle(props.value)
+      value,
+      angle: this.valueToAngle(value)
     }
-    if (props.arcSize < 0) {
-      console.warn(
-        'arcSize should be between 1 and 360. '
-      )
+    if (arcSize <= 0) {
+      console.warn('arcSize should be between 1 and 360.')
+    }
+    if (rotationOffset < -180 || rotationOffset > 180) {
+      console.warn('rotationOffset prop should be between -180 and 180.')
     }
     this.uniqueId = Math.floor(Math.random() * 100) + Date.now()
     this.touches = []
@@ -131,12 +133,14 @@ class Roundy extends Component {
   }
 
   angle(y, x) {
-    const { rotation } = this.props
-    let angle = this.radToDeg(Math.atan2(y, x)) + 180 - rotation
+    const { rotationOffset } = this.props
+    let angle = this.radToDeg(Math.atan2(y, x)) + 180 - rotationOffset
     if (angle > 360) {
       angle = angle - 360
     }
-    console.log(angle)
+    if (angle < 0) {
+      angle = 360 + angle
+    }
     return angle
   }
 
@@ -153,16 +157,17 @@ class Roundy extends Component {
   }
 
   stepRounding(degree) {
-    const { step, min, arcSize, rotation } = this.props
+    const { stepSize, steps, min, max, arcSize } = this.props
+    const step = stepSize || (steps ? ((max - min) / steps) : 1)
     const { angle: oldAngle } = this.state
     let angToValue = min
     if (!this.isDrag) {
       angToValue = this.angleToValue(degree)
     } else {
       angToValue = this.angleToValue(
-        oldAngle > (arcSize - 20) && degree < (arcSize / 4)
+        oldAngle > arcSize - 20 && degree < arcSize / 4
           ? Math.max(degree, arcSize)
-          : oldAngle < 20 && degree > (arcSize - 20)
+          : oldAngle < 20 && degree > arcSize - 20
           ? Math.min(degree, 0)
           : degree
       )
@@ -199,7 +204,7 @@ class Roundy extends Component {
 
   getMaskLine(segments, index) {
     const { radius, arcSize } = this.props
-    const val = (arcSize/ segments) * index + 180
+    const val = (arcSize / segments) * index + 180
     const rotateFunction =
       'rotate(' + val.toString() + ',' + radius + ',' + radius + ')'
     return (
@@ -224,7 +229,8 @@ class Roundy extends Component {
       bgColor,
       max,
       min,
-      step,
+      steps,
+      stepSize,
       strokeWidth,
       thumbSize,
       radius,
@@ -232,15 +238,16 @@ class Roundy extends Component {
       render,
       style,
       arcSize,
-      rotation,
+      rotationOffset,
       allowClick
     } = this.props
     const { angle } = this.state
-    const segments = Math.floor((max - min) / step)
+    const segments =
+      steps || (stepSize ? Math.floor((max - min) / stepSize) : 0)
     const maskName = `${classNamePrefix}_${this.uniqueId}`
     const size = radius * 2
     const styleRotation = {
-      transform: `rotate(${rotation}deg)`,
+      transform: `rotate(${rotationOffset}deg)`,
       transformOrigin: '50% 50%'
     }
     return (
@@ -267,21 +274,20 @@ class Roundy extends Component {
           </div>
         ) : (
           <Fragment>
-            <svg
-              ref={this._wrapper}
-              width={size}
-              height={size}
-            >
+            <svg ref={this._wrapper} width={size} height={size}>
               {sliced && (
                 <defs>
-                  <mask id={maskName} maskUnits="userSpaceOnUse" style={styleRotation}>
+                  <mask
+                    id={maskName}
+                    maskUnits="userSpaceOnUse"
+                    style={styleRotation}
+                  >
                     <rect x={0} y={0} width={size} height={size} fill="white" />
-                    {step &&
-                      Array(segments)
-                        .fill()
-                        .map((e, i) => {
-                          return this.getMaskLine(segments, i)
-                        })}
+                    {Array(segments)
+                      .fill()
+                      .map((e, i) => {
+                        return this.getMaskLine(segments, i)
+                      })}
                   </mask>
                 </defs>
               )}
@@ -291,7 +297,7 @@ class Roundy extends Component {
                 strokeDashoffset="0"
                 strokeWidth={strokeWidth}
                 stroke={bgColor}
-                mask={`url(#${maskName})`}
+                mask={sliced ? `url(#${maskName})` : null}
                 style={styleRotation}
                 d={this.getArc(Math.min(arcSize, 359.9999), 0)}
               />
@@ -299,7 +305,7 @@ class Roundy extends Component {
                 fill="none"
                 strokeWidth={strokeWidth}
                 stroke={color}
-                mask={`url(#${maskName})`}
+                mask={sliced ? `url(#${maskName})` : null}
                 style={styleRotation}
                 d={this.getArc(Math.min(angle, 359.9999), 0)}
               />
@@ -311,7 +317,7 @@ class Roundy extends Component {
               onTouchStart={this.down}
               onMouseUp={this.up}
               style={{
-                transform: `rotate(${angle + rotation}deg) scaleX(-1)`
+                transform: `rotate(${angle + rotationOffset}deg) scaleX(-1)`
               }}
             />
           </Fragment>
@@ -326,11 +332,13 @@ Roundy.defaultProps = {
   bgColor: '#ccc',
   max: 100,
   min: 0,
-  step: 10,
+  stepSize: 0,
+  // by default we want smooth sliding
+  steps: 0,
   thumbSize: 20,
   sliced: true,
   strokeWidth: 35,
-  rotation: 0,
+  rotationOffset: 0,
   arcSize: 360,
   value: 50, // so we can see some difference
   radius: 100

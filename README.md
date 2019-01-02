@@ -23,9 +23,8 @@ const {value} = this.state
    value={value}
    min={10}
    max={30}
-   step={5}
+   stepSize={5}
    radius={100}
-   sliced
    color='pink'
    onChange={value => this.setState({value})}
    onAfterChange={(value, props) => ... }
@@ -54,7 +53,8 @@ Roundy provides the following API:
 | value | number: Slider value | 50 |
 | min | number: Minimal value | 0 |
 | max | number: Maximum value | 100 |
-| step | number: Step value to snap value | 10 |
+| stepSize | number: Step value to snap value | 0 |
+| steps | number: Number of steps that will be snapable | 0 |
 | radius | number: Slider radius | 100 |
 | color | string: Active slider color | 'purple' |
 | bgColor | string: Slider arc color | '#ccc' |
@@ -63,6 +63,7 @@ Roundy provides the following API:
 | onChange | function: immediate callback function (value, props) | null |
 | onAfterChange | function: callback function after release (value, props) | null |
 | overrideStyle | string: provide additional class style which will be injected into styled-components class | null |
+| render | render prop function that has a signature: ({value, angle}, props) => Node | null |
 
 ## Testing
 TODO
