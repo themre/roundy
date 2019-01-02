@@ -3,7 +3,7 @@ import styled from 'styled-components'
 export const Wrapper = styled.div`
   display: inline-block;
   position: relative;
-  pointer-events: none;
+  pointer-events: ${({allowClick}) => allowClick ? 'auto' : 'none'};
 
   svg {
     path {
