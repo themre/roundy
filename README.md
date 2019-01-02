@@ -63,6 +63,8 @@ Roundy provides the following API:
 | onChange | function: immediate callback function (value, props) | null |
 | onAfterChange | function: callback function after release (value, props) | null |
 | overrideStyle | string: provide additional class style which will be injected into styled-components class | null |
+| arcSize | number: Size of the arc. Default is 360, can be between 1 and 360 | 360 |
+| rotationOffset | number: rotation of the whole circle. Can be between -180 and 180 | 0 |
 | render | render prop function that has a signature: ({value, angle}, props) => Node | null |
 
 ## Testing
