@@ -29,7 +29,17 @@ const {value} = this.state
    onChange={value => this.setState({value})}
    onAfterChange={(value, props) => ... }
    overrideStyle={ ... string template as CSS ...}
->
+/>
+```
+
+You can create pie round chart
+```javascript
+<Roundy
+   arcSize={270}
+   min={10}
+   max={30}
+   rotationOffset={-45}
+/>
 ```
 
 Or use roundy as a group of sliders:
