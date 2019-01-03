@@ -5,7 +5,8 @@ module.exports = {
     umd: {
       global: 'roundy',
       externals: {
-        react: 'React'
+        'react': 'React',
+        'styled-components': 'StyledComponents'
       }
     }
   }
