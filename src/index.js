@@ -239,7 +239,8 @@ class Roundy extends Component {
       style,
       arcSize,
       rotationOffset,
-      allowClick
+      allowClick,
+      overrideStyle
     } = this.props
     const { angle } = this.state
     const segments =
@@ -262,6 +263,7 @@ class Roundy extends Component {
         onTouchCancel={this.up}
         style={style}
         allowClick={allowClick}
+        overrideStyle={overrideStyle}
       >
         {render ? (
           // use render props
