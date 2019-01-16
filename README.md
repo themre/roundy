@@ -69,6 +69,7 @@ Roundy provides the following API:
 | color | string: Active slider color | 'purple' |
 | bgColor | string: Slider arc color | '#ccc' |
 | strokeWidth | number: Slider arc width | 15 |
+| thumbSize | number: Size (diameter) of thumb | 20 |
 | sliced | boolean: Provide slices based on step value | true |
 | onChange | function: immediate callback function (value, props) | null |
 | onAfterChange | function: callback function after release (value, props) | null |
