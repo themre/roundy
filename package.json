@@ -1,6 +1,6 @@
 {
   "name": "roundy",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "roundy React component",
   "main": "lib/index.js",
   "module": "es/index.js",
