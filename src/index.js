@@ -37,14 +37,9 @@ class Roundy extends Component {
   }
 
   componentDidMount() {
-    document.addEventListener('mouseup', this.up)
     if (!this.props.allowClick && this._wrapper.current) {
       this._wrapper.current.style.pointerEvents = 'none'
     }
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('mouseup', this.up)
   }
 
   up = e => {
