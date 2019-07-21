@@ -1,6 +1,6 @@
 {
   "name": "roundy",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "roundy React component",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -19,15 +19,15 @@
     "test:watch": "nwb test-react --server"
   },
   "dependencies": {
-    "styled-components": "^3.1.6"
+    "styled-components": "^4.3.2"
   },
   "peerDependencies": {
     "react": "16.x"
   },
   "devDependencies": {
-    "nwb": "0.21.x",
-    "react": "16.6.3",
-    "react-dom": "16.6.3"
+    "nwb": "0.23.0",
+    "react": "16.8.6",
+    "react-dom": "16.8.6"
   },
   "author": "Marko Trebizan",
   "homepage": "",

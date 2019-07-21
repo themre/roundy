@@ -55,7 +55,6 @@ class Roundy extends Component {
   }
 
   getTouchMove = e => {
-    // e.preventDefault()
     e.stopPropagation()
     if (this.allowChange || this.isDrag) {
       let idx = 0
@@ -74,9 +73,8 @@ class Roundy extends Component {
       this._wrapper.current.style.pointerEvents = 'auto'
     }
     e.stopPropagation()
-    // e.preventDefault()
     // we update first value, then we decide based on rotation
-    if (!this.isDrag) {
+    if (!this.isDrag && e.clientX) {
       this.updateValue(e, true)
     }
     this.allowChange = true
@@ -100,12 +98,12 @@ class Roundy extends Component {
       angle: endAngle
     })
     const arcSweep = startAngle <= 180 ? 0 : 1
-
     return `M ${start} A ${pathRadius} ${pathRadius} 0 ${arcSweep} 0 ${end}`
   }
-
+  
   polarToCartesian({ pathRadius, angle, radius }) {
     const angleInRadians = (angle - 180) * DEGREE_IN_RADIANS
+
     const x = radius + pathRadius * Math.cos(angleInRadians)
     const y = radius + pathRadius * Math.sin(angleInRadians)
 
@@ -188,9 +186,10 @@ class Roundy extends Component {
 
   updateValue = (event, forceSet) => {
     if (!this.isDrag && !forceSet) return
-    let eX = 0,
-      eY = 0
     const { clientX, clientY } = event
+    let eX = clientX,
+      eY = clientY
+    
     eX = clientX
     eY = clientY
     const { left, top } = this.getCenter()
