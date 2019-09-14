@@ -97,8 +97,8 @@ class Roundy extends Component {
       pathRadius,
       angle: endAngle
     })
-    const arcSweep = startAngle <= 180 ? 0 : 1
-    return `M ${start} A ${pathRadius} ${pathRadius} 0 ${arcSweep} 0 ${end}`
+    const largeArcFlag = startAngle <= 180 ? 0 : 1
+    return `M ${start} A ${pathRadius} ${pathRadius} 0 ${largeArcFlag} 0 ${end}`
   }
   
   polarToCartesian({ pathRadius, angle, radius }) {
