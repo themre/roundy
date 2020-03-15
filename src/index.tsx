@@ -35,14 +35,13 @@ interface StateType {
   angle: number;
 }
 
-export interface MainRoundyProps extends Partial<InternalRoundyProps> {
+export type MainRoundyProps = Partial<InternalRoundyProps> & {
   render?: (state: StateType, props: InternalRoundyProps) => React.ReactNode;
   onAfterChange?: (state: any, props: any) => void;
   onChange?: (state: any, props: any) => void;
   style?: any;
   allowClick?: boolean;
-}
-
+};
 
 function Roundy(optProps: MainRoundyProps) {
   const props = { ...defaultProps, ...optProps };
@@ -68,6 +67,7 @@ function Roundy(optProps: MainRoundyProps) {
 
   const _wrapper = React.useRef(null);
   const _handle = React.useRef(null);
+  const isDrag = React.useRef(false);
 
   const [state, setAll] = React.useState<StateType>({
     value: props.value,
@@ -75,22 +75,24 @@ function Roundy(optProps: MainRoundyProps) {
   });
 
   const bind = useDrag(({ down, xy: [x, y] }) => {
-    setValueAndAngle(x, y);
-    if (!down) {
-      onAfterChange && onAfterChange(state, props);
-    }
+    setValueAndAngle(x, y, !down ? newState => {
+      isDrag.current = down
+      onAfterChange && onAfterChange(newState, props);
+    } : undefined);
   });
 
   React.useEffect(() => {
-    setAll({
+    const newState = {
       value: props.value,
       angle: valueToAngle(props.value, props),
-    });
+    };
+    setAll(newState);
+    onChange && onChange(newState, props)
+    onAfterChange && onAfterChange(newState, props);
   }, [props.value]);
 
   const setState = (obj: Partial<StateType>) =>
     setAll(prev => ({ ...prev, ...obj }));
-  const isDrag = React.useRef(false);
   const { angle } = state;
   const segments = steps || (stepSize ? Math.floor((max - min) / stepSize) : 0);
   const maskName = `${classNamePrefix}_${uniqueId}`;
@@ -100,23 +102,37 @@ function Roundy(optProps: MainRoundyProps) {
     transformOrigin: '50% 50%',
   };
 
-  const setValueAndAngle = (x: number, y: number) => {
+  const setValueAndAngle = (
+    x: number,
+    y: number,
+    cb?: (newState: StateType) => void
+  ) => {
     const { left, top } = getCenter(_wrapper, radius);
     const dX = x - left;
     const dY = y - top;
     const { value, angle } = stepRounding(getAngle(dY, dX, rotationOffset));
-    setState({ value, angle });
+    const newState = { value, angle };
+    setState(newState);
+    if (cb) {
+      // debugger
+      cb(newState);
+    }
     onChange && onChange(value, props);
   };
 
   const updateOnClick = event => {
+    if (isDrag.current) {
+      return
+    }
     const { clientX, clientY } = event;
     let eX = clientX,
       eY = clientY;
 
     eX = clientX;
     eY = clientY;
-    setValueAndAngle(eX, eY);
+    setValueAndAngle(eX, eY, newState => {
+      onAfterChange && onAfterChange(newState, props);
+    });
   };
 
   const getMaskLine = (segments: number, index: number) => {
@@ -175,12 +191,17 @@ function Roundy(optProps: MainRoundyProps) {
     <Style
       className="roundy"
       onClick={updateOnClick}
-      style={allowClick ? style : { ...(style || {}), pointerEvents: 'none' }}
+      style={
+        allowClick || render
+          ? style
+          : { ...(style || {}), pointerEvents: 'none' }
+      }
     >
       {render ? (
         <div
-          className="customWrapper"
+          className="roundyRenderPropsParent"
           ref={_wrapper}
+          {...bind()}
           style={{ width: size, height: size, display: 'inline-block' }}
         >
           {render(state, props)}
