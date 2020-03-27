@@ -28,7 +28,10 @@ class Roundy extends Component {
 
   static getDerivedStateFromProps(props, state) {
     if (props.value !== state.value) {
-      return { value: props.value }
+      return {
+        value: props.value,
+        angle: this.valueToAngle(value)
+      }
     }
   
     return null
