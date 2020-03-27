@@ -82,13 +82,13 @@ function Roundy(optProps: MainRoundyProps) {
   });
 
   React.useEffect(() => {
-    const newState = {
-      value: props.value,
-      angle: valueToAngle(props.value, props),
-    };
-    setAll(newState);
-    onChange && onChange(newState, props)
-    onAfterChange && onAfterChange(newState, props);
+    if (props.value !== state.value) {
+      const newState = {
+        value: props.value,
+        angle: valueToAngle(props.value, props),
+      };
+      setAll(newState);
+    }
   }, [props.value]);
 
   const setState = (obj: Partial<StateType>) =>
@@ -114,7 +114,6 @@ function Roundy(optProps: MainRoundyProps) {
     const newState = { value, angle };
     setState(newState);
     if (cb) {
-      // debugger
       cb(newState);
     }
     onChange && onChange(value, props);

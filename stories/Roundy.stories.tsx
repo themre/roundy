@@ -1,19 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Roundy from '../src';
 
 export default {
   title: 'Roundy',
 };
 
-export const toStorybook = () => (
-  <Roundy
+export const toStorybook = () => {
+  const [val, setVal] = useState(30)
+  return <Roundy
     arcSize={300}
     max={100}
     stepSize={10}
-    value={80}
+    value={val}
+    onChange={setVal}
     allowClick={true}
     onAfterChange={(a, b, c) => console.log(a, c, b)}
   />
+}
 );
 
 toStorybook.story = {
