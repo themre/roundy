@@ -26,14 +26,15 @@ class Roundy extends Component {
     this._handle = createRef()
   }
 
-  componentWillReceiveProps(props) {
-    if (this.state.value !== props.value) {
-      const value = props.value;
-      this.setState({ 
-        value,
+  static getDerivedStateFromProps(props, state) {
+    if (props.value !== state.value) {
+      return {
+        value: props.value,
         angle: this.valueToAngle(value)
-      })
+      }
     }
+  
+    return null
   }
 
   componentDidMount() {
