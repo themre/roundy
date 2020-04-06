@@ -4,13 +4,18 @@ import { Wrapper } from './Style'
 const DEGREE_IN_RADIANS = Math.PI / 180
 const classNamePrefix = 'RoundSlider'
 
+const valueToAngle = (value, { max, min, arcSize }) => {
+  const angle = ((value - min) / (max - min)) * arcSize
+  return angle
+}
+
 class Roundy extends Component {
   constructor(props) {
     super(props)
     const { value, arcSize, rotationOffset } = props
     this.state = {
       value,
-      angle: this.valueToAngle(value)
+      angle: valueToAngle(value, props)
     }
     if (arcSize <= 0) {
       console.warn('arcSize should be between 1 and 360.')
@@ -30,7 +35,7 @@ class Roundy extends Component {
     if (props.value !== state.value) {
       return {
         value: props.value,
-        angle: this.valueToAngle(value)
+        angle: valueToAngle(value, props)
       }
     }
   
@@ -148,12 +153,6 @@ class Roundy extends Component {
     return v
   }
 
-  valueToAngle = value => {
-    const { max, min, arcSize } = this.props
-    const angle = ((value - min) / (max - min)) * arcSize
-    return angle
-  }
-
   stepRounding(degree) {
     const { stepSize, steps, min, max, arcSize } = this.props
     const step = stepSize || (steps ? ((max - min) / steps) : 1)
@@ -181,7 +180,7 @@ class Roundy extends Component {
       value = currVal - angToValue > angToValue - preVal ? currVal : preVal
     }
     value = Math.round(value)
-    const ang = this.valueToAngle(value)
+    const ang = valueToAngle(value, this.props)
     return { value, angle: ang }
   }
 
