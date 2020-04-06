@@ -4,13 +4,18 @@ import { Wrapper } from './Style'
 const DEGREE_IN_RADIANS = Math.PI / 180
 const classNamePrefix = 'RoundSlider'
 
+const valueToAngle = (value, { max, min, arcSize }) => {
+  const angle = ((value - min) / (max - min)) * arcSize
+  return angle
+}
+
 class Roundy extends Component {
   constructor(props) {
     super(props)
     const { value, arcSize, rotationOffset } = props
     this.state = {
       value,
-      angle: this.valueToAngle(value)
+      angle: valueToAngle(value, props)
     }
     if (arcSize <= 0) {
       console.warn('arcSize should be between 1 and 360.')
@@ -26,21 +31,21 @@ class Roundy extends Component {
     this._handle = createRef()
   }
 
-  componentWillReceiveProps(props) {
-    if (this.state.value !== props.value) {
-      this.setState({ value: props.value })
+  static getDerivedStateFromProps(props, state) {
+    if (props.value !== state.value) {
+      return {
+        value: props.value,
+        angle: valueToAngle(value, props)
+      }
     }
+  
+    return null
   }
 
   componentDidMount() {
-    document.addEventListener('mouseup', this.up)
     if (!this.props.allowClick && this._wrapper.current) {
       this._wrapper.current.style.pointerEvents = 'none'
     }
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('mouseup', this.up)
   }
 
   up = e => {
@@ -56,7 +61,6 @@ class Roundy extends Component {
   }
 
   getTouchMove = e => {
-    // e.preventDefault()
     e.stopPropagation()
     if (this.allowChange || this.isDrag) {
       let idx = 0
@@ -75,9 +79,8 @@ class Roundy extends Component {
       this._wrapper.current.style.pointerEvents = 'auto'
     }
     e.stopPropagation()
-    // e.preventDefault()
     // we update first value, then we decide based on rotation
-    if (!this.isDrag) {
+    if (!this.isDrag && e.clientX) {
       this.updateValue(e, true)
     }
     this.allowChange = true
@@ -100,13 +103,13 @@ class Roundy extends Component {
       pathRadius,
       angle: endAngle
     })
-    const arcSweep = startAngle <= 180 ? 0 : 1
-
-    return `M ${start} A ${pathRadius} ${pathRadius} 0 ${arcSweep} 0 ${end}`
+    const largeArcFlag = startAngle <= 180 ? 0 : 1
+    return `M ${start} A ${pathRadius} ${pathRadius} 0 ${largeArcFlag} 0 ${end}`
   }
-
+  
   polarToCartesian({ pathRadius, angle, radius }) {
     const angleInRadians = (angle - 180) * DEGREE_IN_RADIANS
+
     const x = radius + pathRadius * Math.cos(angleInRadians)
     const y = radius + pathRadius * Math.sin(angleInRadians)
 
@@ -150,12 +153,6 @@ class Roundy extends Component {
     return v
   }
 
-  valueToAngle = value => {
-    const { max, min, arcSize } = this.props
-    const angle = ((value - min) / (max - min)) * arcSize
-    return angle
-  }
-
   stepRounding(degree) {
     const { stepSize, steps, min, max, arcSize } = this.props
     const step = stepSize || (steps ? ((max - min) / steps) : 1)
@@ -183,15 +180,16 @@ class Roundy extends Component {
       value = currVal - angToValue > angToValue - preVal ? currVal : preVal
     }
     value = Math.round(value)
-    const ang = this.valueToAngle(value)
+    const ang = valueToAngle(value, this.props)
     return { value, angle: ang }
   }
 
   updateValue = (event, forceSet) => {
     if (!this.isDrag && !forceSet) return
-    let eX = 0,
-      eY = 0
     const { clientX, clientY } = event
+    let eX = clientX,
+      eY = clientY
+    
     eX = clientX
     eY = clientY
     const { left, top } = this.getCenter()
@@ -239,7 +237,8 @@ class Roundy extends Component {
       style,
       arcSize,
       rotationOffset,
-      allowClick
+      allowClick,
+      overrideStyle
     } = this.props
     const { angle } = this.state
     const segments =
@@ -262,6 +261,7 @@ class Roundy extends Component {
         onTouchCancel={this.up}
         style={style}
         allowClick={allowClick}
+        overrideStyle={overrideStyle}
       >
         {render ? (
           // use render props

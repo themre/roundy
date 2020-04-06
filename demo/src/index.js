@@ -17,7 +17,7 @@ class Demo extends Component {
     }
   }
   render() {
-    const { max, min, step, radius, color } = this.state
+    const { max, min, step, radius, color, value } = this.state
     return (
       <div>
         <h1>roundy Demo</h1>
@@ -30,6 +30,15 @@ class Demo extends Component {
           <li>min</li>
         </ul>
         <h3>Tweak it</h3>
+        Value{' '}
+        <input
+          value={value}
+          onChange={e => this.setState({ value: e.target.value })}
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+        />
         Max{' '}
         <input
           value={max}

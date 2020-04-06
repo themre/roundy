@@ -29,7 +29,17 @@ const {value} = this.state
    onChange={value => this.setState({value})}
    onAfterChange={(value, props) => ... }
    overrideStyle={ ... string template as CSS ...}
->
+/>
+```
+
+You can create pie round chart
+```javascript
+<Roundy
+   arcSize={270}
+   min={10}
+   max={30}
+   rotationOffset={-45}
+/>
 ```
 
 Or use roundy as a group of sliders:
@@ -59,6 +69,7 @@ Roundy provides the following API:
 | color | string: Active slider color | 'purple' |
 | bgColor | string: Slider arc color | '#ccc' |
 | strokeWidth | number: Slider arc width | 15 |
+| thumbSize | number: Size (diameter) of thumb | 20 |
 | sliced | boolean: Provide slices based on step value | true |
 | onChange | function: immediate callback function (value, props) | null |
 | onAfterChange | function: callback function after release (value, props) | null |
