@@ -8,6 +8,7 @@ Configurable react round slider. Supports touch events.
 
 ```
 npm i roundy (or yarn add roundy)
+or something
 ```
 
 ## Usage
